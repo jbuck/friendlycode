@@ -6,7 +6,11 @@ define(["jquery", "backbone-events"], function($, BackboneEvents) {
   function LivePreview(options) {
     var self = {codeMirror: options.codeMirror, title: ""},
         codeMirror = options.codeMirror,
-        iframe;
+        iframe = document.createElement("iframe"),
+        commChan;
+
+    iframe.src = "/previewloader.html";
+
 
     codeMirror.on("reparse", function(event) {
       var isPreviewInDocument = $.contains(document.documentElement,
@@ -21,7 +25,14 @@ define(["jquery", "backbone-events"], function($, BackboneEvents) {
         var x = 0,
             y = 0,
             doc, wind;
-        
+
+        if(!iframe.contentWindow) {
+          console.log("adding iframe to preview area");
+          options.previewArea.append(iframe);
+          commChan = iframe.contentWindow;
+        }
+
+ /*
         if (iframe) {
           doc = $(iframe).contents()[0];
           wind = doc.defaultView;
@@ -32,7 +43,7 @@ define(["jquery", "backbone-events"], function($, BackboneEvents) {
 
         iframe = document.createElement("iframe");
         options.previewArea.append(iframe);
-        
+
         // Update the preview area with the given HTML.
         doc = $(iframe).contents()[0];
         wind = doc.defaultView;
@@ -46,13 +57,24 @@ define(["jquery", "backbone-events"], function($, BackboneEvents) {
         var baseTag = doc.createElement('base');
         baseTag.setAttribute('target', '_blank');
         doc.querySelector("head").appendChild(baseTag);
-        
+
+*/
+
+        var messageData = JSON.stringify({
+          type: "overwrite",
+          sourceCode: event.sourceCode
+        });
+        try {
+          commChan.postMessage(messageData, "*");
+        } catch (e) {}
+
+/*
         // TODO: If the document has images that take a while to load
         // and the previous scroll position of the document depends on
         // their dimensions being set on load, we may need to refresh
         // this scroll position after the document has loaded.
         wind.scroll(x, y);
-        
+
         self.trigger("refresh", {
           window: wind,
           documentFragment: event.document
@@ -62,12 +84,13 @@ define(["jquery", "backbone-events"], function($, BackboneEvents) {
           self.title = wind.document.title;
           self.trigger("change:title", self.title);
         }
+*/
       }
     });
 
     BackboneEvents.mixin(self);
     return self;
   };
-  
+
   return LivePreview;
 });
