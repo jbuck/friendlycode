@@ -7,29 +7,33 @@ define(["jquery", "backbone-events"], function($, BackboneEvents) {
     var self = {codeMirror: options.codeMirror, title: ""},
         codeMirror = options.codeMirror,
         iframe = document.createElement("iframe"),
-        commChan;
+        previewLoader = options.previewLoader || "/previewloader.html",
+        previewArea = options.previewArea,
+        telegraph;
 
-    iframe.src = "/previewloader.html";
+    // set up the loader script for the preview iframe
+    iframe.src = previewLoader;
 
-
+    // set up the code-change handling.
     codeMirror.on("reparse", function(event) {
-      var isPreviewInDocument = $.contains(document.documentElement,
-                                           options.previewArea[0]);
+      var isPreviewInDocument = $.contains(document.documentElement, previewArea);
       if (!isPreviewInDocument) {
         if (window.console)
           window.console.log("reparse triggered, but preview area is not " +
                              "attached to the document.");
         return;
       }
+
       if (!event.error || options.ignoreErrors) {
         var x = 0,
             y = 0,
             doc, wind;
 
+        // add the preview iframe to the editor on the first
+        // attempt to parse the Code Mirror text
         if(!iframe.contentWindow) {
-          console.log("adding iframe to preview area");
-          options.previewArea.append(iframe);
-          commChan = iframe.contentWindow;
+          previewArea.append(iframe);
+          telegraph = iframe.contentWindow;
         }
 
  /*
@@ -47,26 +51,21 @@ define(["jquery", "backbone-events"], function($, BackboneEvents) {
         // Update the preview area with the given HTML.
         doc = $(iframe).contents()[0];
         wind = doc.defaultView;
-
-        doc.open();
-        doc.write(event.sourceCode);
-        doc.close();
-
-        // Insert a BASE TARGET tag so that links don't open in
-        // the iframe.
-        var baseTag = doc.createElement('base');
-        baseTag.setAttribute('target', '_blank');
-        doc.querySelector("head").appendChild(baseTag);
-
 */
 
-        var messageData = JSON.stringify({
+        // Communicate content changes. For the moment,
+        // we treat all changes as a full refresh.
+        var message = JSON.stringify({
           type: "overwrite",
           sourceCode: event.sourceCode
         });
+
         try {
-          commChan.postMessage(messageData, "*");
-        } catch (e) {}
+          telegraph.postMessage(message, "*");
+        } catch (e) {
+          console.log("An error occurred while postMessaging data to the preview pane");
+          throw e;
+        }
 
 /*
         // TODO: If the document has images that take a while to load
