@@ -55,7 +55,7 @@ define(function(require) {
       codeMirror: codeMirror,
       ignoreErrors: true,
       previewArea: previewArea,
-      previewLoader: option.previewLoader
+      previewLoader: options.previewLoader
     });
     var previewToEditorMapping = PreviewToEditorMapping(preview);
 
