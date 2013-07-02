@@ -67,7 +67,7 @@ define(["jquery", "backbone-events"], function($, BackboneEvents) {
           throw e;
         }
 
-/*
+
         // TODO: If the document has images that take a while to load
         // and the previous scroll position of the document depends on
         // their dimensions being set on load, we may need to refresh
@@ -83,7 +83,6 @@ define(["jquery", "backbone-events"], function($, BackboneEvents) {
           self.title = wind.document.title;
           self.trigger("change:title", self.title);
         }
-*/
       }
     });
 
